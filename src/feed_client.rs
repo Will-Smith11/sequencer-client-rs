@@ -132,6 +132,7 @@ impl RelayClient {
                             Ok(d) => d,
                             Err(_) => continue,
                         };
+                        println!("{}", decoded_root.messages.len());
 
                         // first tx only
                         let decoded_tx = match decoded_root.messages[0].message.message.decode() {
