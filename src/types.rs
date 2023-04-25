@@ -12,8 +12,6 @@ pub struct Tx {
     pub seq_num: i64,
     // Time at recieve
     pub time: Instant,
-    // Tx   (to, value, data)
-    pub tx: (H160, U256, Vec<u8>),
     pub l2_tx: Transaction,
 }
 
