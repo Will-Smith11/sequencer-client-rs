@@ -135,12 +135,13 @@ impl RelayClient {
                                     continue;
                                 }
                             };
-                        println!("{}", decoded_root.messages.len());
-
                         // first tx only
                         let decoded_tx = match decoded_root.messages[0].message.message.decode() {
                             Some(d) => d,
-                            None => continue,
+                            None => {
+                                println!("failed to decode transaction");
+                                continue;
+                            }
                         };
                         let l2_bytes =
                             base64::decode(&decoded_root.messages[0].message.message.l2msg)
