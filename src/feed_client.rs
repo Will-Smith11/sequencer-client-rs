@@ -127,11 +127,14 @@ impl RelayClient {
                         // for benchmarking / disconnecting bad connections
                         let now = Instant::now();
 
-                        let decoded_root: Root = match serde_json::from_slice(&message.into_data())
-                        {
-                            Ok(d) => d,
-                            Err(_) => continue,
-                        };
+                        let decoded_root: Root =
+                            match serde_json::from_slice(&message.clone().into_data()) {
+                                Ok(d) => d,
+                                Err(_) => {
+                                    println!("{:?}", message);
+                                    continue;
+                                }
+                            };
                         println!("{}", decoded_root.messages.len());
 
                         // first tx only
@@ -172,4 +175,3 @@ impl RelayClient {
         Ok(())
     }
 }
-
