@@ -156,6 +156,11 @@ impl RelayClient {
                                     new_head = res.1;
                                     result.push(ethers::utils::rlp::decode(&msg[1..]).unwrap());
                                 }
+                                if new_head.len() != 0 {
+                                    result
+                                        .push(ethers::utils::rlp::decode(&new_head[1..]).unwrap());
+                                }
+
                                 result
                             }
                             4 => {
