@@ -150,16 +150,25 @@ impl RelayClient {
                                 let mut new_head = l2_bytes.as_slice();
                                 let mut result = vec![];
 
-                                while new_head.len() > MAX_ARB_MSG_SIZE {
-                                    let res = new_head.split_at(MAX_ARB_MSG_SIZE);
+                                while new_head.len() > 8 {
+                                    // first 8 bytes
+                                    let (size, res) = new_head.split_at(8);
+                                    let size = u64::from_be_bytes(size.try_into().unwrap());
+                                    let res = res.split_at(size as usize);
                                     let msg = res.0;
                                     new_head = res.1;
                                     result.push(ethers::utils::rlp::decode(&msg[1..]).unwrap());
                                 }
-                                if new_head.len() != 0 {
-                                    result
-                                        .push(ethers::utils::rlp::decode(&new_head[1..]).unwrap());
-                                }
+                                // if new_head.len() != 0 {
+                                //     let index = u64::from_be_bytes(ne);
+                                //
+                                //     result.push(
+                                //         ethers::utils::rlp::decode(
+                                //             &new_head[1..].split_at(index).0,
+                                //         )
+                                //         .unwrap(),
+                                //     );
+                                // }
 
                                 result
                             }
