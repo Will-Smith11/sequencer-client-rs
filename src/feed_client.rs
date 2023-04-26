@@ -15,7 +15,7 @@ use std::{
 use tungstenite::{stream::MaybeTlsStream, WebSocket};
 use url::Url;
 
-const MAX_ARB_MSG_SIZE: usize = 0x40000;
+const MAX_ARB_MSG_SIZE: u64 = 0x40000;
 
 /// Sequencer Feed Client
 pub struct RelayClient {
@@ -154,12 +154,20 @@ impl RelayClient {
                                     // first 8 bytes
                                     let (size, res) = new_head.split_at(8);
                                     let size = u64::from_be_bytes(size.try_into().unwrap());
-                                    println!("{size}");
+                                    if size > MAX_ARB_MSG_SIZE {
+                                        break;
+                                    }
                                     let res = res.split_at(size as usize);
                                     let msg = res.0;
                                     new_head = res.1;
-                                    result.push(ethers::utils::rlp::decode(&msg[1..]).unwrap());
-                                    println!("decoded tx")
+
+                                    match ethers::utils::rlp::decode(&msg[1..]) {
+                                        Ok(tx) => result.push(tx),
+                                        Err(e) => {
+                                            println!("{e}");
+                                            continue;
+                                        }
+                                    }
                                 }
 
                                 result
