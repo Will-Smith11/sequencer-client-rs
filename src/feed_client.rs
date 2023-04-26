@@ -171,7 +171,13 @@ impl RelayClient {
                             }
                             4 => {
                                 // single
-                                vec![ethers::utils::rlp::decode(&l2_bytes[1..]).unwrap()]
+                                match ethers::utils::rlp::decode(&l2_bytes[1..]) {
+                                    Ok(tx) => vec![tx],
+                                    Err(e) => {
+                                        println!("{e}");
+                                        vec![]
+                                    }
+                                }
                             }
                             _ => {
                                 vec![]
