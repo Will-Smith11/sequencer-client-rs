@@ -157,9 +157,9 @@ impl RelayClient {
                                     println!("{size}");
                                     let res = res.split_at(size as usize);
                                     let msg = res.0;
-                                    new_head = &res.1[1..];
-                                    result.push(ethers::utils::rlp::decode(&msg).unwrap());
-                                    println!("decoded batch tx");
+                                    new_head = res.1;
+                                    result.push(ethers::utils::rlp::decode(&msg[1..]).unwrap());
+                                    println!("decoded tx")
                                 }
 
                                 result
