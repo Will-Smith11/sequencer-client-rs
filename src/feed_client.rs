@@ -136,13 +136,10 @@ impl RelayClient {
                                     continue;
                                 }
                             };
-                        let kind = decoded_root.messages[0].message.message.header.kind;
-                        println!("message kind {kind}");
 
                         let l2_bytes =
                             base64::decode(&decoded_root.messages[0].message.message.l2msg)
                                 .unwrap();
-                        println!("l2 type: {}", l2_bytes[0]);
 
                         let l2_tx: Vec<Transaction> = match l2_bytes[0] {
                             3 => {
@@ -176,7 +173,9 @@ impl RelayClient {
                                 // single
                                 vec![ethers::utils::rlp::decode(&l2_bytes[1..]).unwrap()]
                             }
-                            _ => unreachable!(),
+                            _ => {
+                                vec![]
+                            }
                         };
 
                         let tx = Tx {
