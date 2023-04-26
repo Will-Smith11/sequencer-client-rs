@@ -147,7 +147,7 @@ impl RelayClient {
                         let l2_tx: Vec<Transaction> = match l2_bytes[0] {
                             3 => {
                                 // batch
-                                let mut new_head = l2_bytes.as_slice();
+                                let mut new_head = &l2_bytes.as_slice()[1..];
                                 let mut result = vec![];
 
                                 while new_head.len() > 8 {
@@ -157,7 +157,7 @@ impl RelayClient {
                                     println!("{size}");
                                     let res = res.split_at(size as usize);
                                     let msg = res.0;
-                                    new_head = res.1;
+                                    new_head = &res.1[1..];
                                     result.push(ethers::utils::rlp::decode(&msg[1..]).unwrap());
                                 }
                                 // if new_head.len() != 0 {
