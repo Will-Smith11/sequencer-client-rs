@@ -154,6 +154,7 @@ impl RelayClient {
                                     // first 8 bytes
                                     let (size, res) = new_head.split_at(8);
                                     let size = u64::from_be_bytes(size.try_into().unwrap());
+                                    println!("{size}");
                                     let res = res.split_at(size as usize);
                                     let msg = res.0;
                                     new_head = res.1;
