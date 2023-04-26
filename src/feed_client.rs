@@ -26,6 +26,16 @@ const L1MessageType_EthDeposit: u8 = 12;
 const L1MessageType_BatchPostingReport: u8 = 13;
 const L1MessageType_Invalid: u8 = 0xFF;
 
+const L2MessageKind_UnsignedUserTx: u8 = 0;
+
+const L2MessageKind_ContractTx: u8 = 1;
+const L2MessageKind_NonmutatingCall: u8 = 2;
+const L2MessageKind_Batch: u8 = 3;
+const L2MessageKind_SignedTx: u8 = 4;
+// 5 is reserved
+const L2MessageKind_Heartbeat: u8 = 6; // deprecated
+const L2MessageKind_SignedCompressedTx: u8 = 7;
+
 /// Sequencer Feed Client
 pub struct RelayClient {
     // Socket connection to read from
@@ -145,23 +155,42 @@ impl RelayClient {
                                     continue;
                                 }
                             };
+                        let kind = decoded_root.messages[0].message.message.header.kind;
+                        println!("message kind {kind}");
 
                         let l2_bytes =
                             base64::decode(&decoded_root.messages[0].message.message.l2msg)
                                 .unwrap();
+                        println!("l2 type: {}", l2_bytes[0]);
 
-                        match l2_bytes[0] {
-                            L1MessageType_Invalid => println!("invalid message"),
-                            L1MessageType_L2Message => println!("l2 message"),
-                            L1MessageType_EndOfBlock => println!("end of block"),
-                            L1MessageType_EthDeposit => println!("eth deposit"),
-                            L1MessageType_Initialize => println!("initialize"),
-                            L1MessageType_RollupEvent => println!("rollup event"),
-                            L1MessageType_L2FundedByL1 => println!("l2 funded by l1"),
-                            L1MessageType_SubmitRetryable => println!("submit retryable"),
-                            L1MessageType_BatchForGasEstimation => println!("batch for gas estimation"),
-                            _ => {}
-                        }
+                        // add support for batching
+                        //
+
+                        // if depth >= 16 {
+                        // 			return nil, errors.New("L2 message batches have a max depth of 16")
+                        // 		}
+                        // 		segments := make(types.Transactions, 0)
+                        // 		index := big.NewInt(0)
+                        // 		for {
+                        // 			nextMsg, err := util.BytestringFromReader(rd, arbostypes.MaxL2MessageSize)
+                        // 			if err != nil {
+                        // 				// an error here means there are no further messages in the batch
+                        // 				// nolint:nilerr
+                        // 				return segments, nil
+                        // 			}
+                        //
+                        // 			var nextRequestId *common.Hash
+                        // 			if requestId != nil {
+                        // 				subRequestId := crypto.Keccak256Hash(requestId[:], math.U256Bytes(index))
+                        // 				nextRequestId = &subRequestId
+                        // 			}
+                        // 			nestedSegments, err := parseL2Message(bytes.NewReader(nextMsg), poster, timestamp, nextRequestId, chainId, depth+1)
+                        // 			if err != nil {
+                        // 				return nil, err
+                        // 			}
+                        // 			segments = append(segments, nestedSegments...)
+                        // 			index.Add(index, big.NewInt(1))
+                        // 		}
 
                         let l2_tx: Transaction = match ethers::utils::rlp::decode(&l2_bytes[1..]) {
                             Ok(r) => r,
