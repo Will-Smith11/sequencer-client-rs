@@ -15,26 +15,7 @@ use std::{
 use tungstenite::{stream::MaybeTlsStream, WebSocket};
 use url::Url;
 
-const L1MessageType_L2Message: u8 = 3;
-const L1MessageType_EndOfBlock: u8 = 6;
-const L1MessageType_L2FundedByL1: u8 = 7;
-const L1MessageType_RollupEvent: u8 = 8;
-const L1MessageType_SubmitRetryable: u8 = 9;
-const L1MessageType_BatchForGasEstimation: u8 = 10; // probably won't use this in practice
-const L1MessageType_Initialize: u8 = 11;
-const L1MessageType_EthDeposit: u8 = 12;
-const L1MessageType_BatchPostingReport: u8 = 13;
-const L1MessageType_Invalid: u8 = 0xFF;
-
-const L2MessageKind_UnsignedUserTx: u8 = 0;
-
-const L2MessageKind_ContractTx: u8 = 1;
-const L2MessageKind_NonmutatingCall: u8 = 2;
-const L2MessageKind_Batch: u8 = 3;
-const L2MessageKind_SignedTx: u8 = 4;
-// 5 is reserved
-const L2MessageKind_Heartbeat: u8 = 6; // deprecated
-const L2MessageKind_SignedCompressedTx: u8 = 7;
+const MAX_ARB_MSG_SIZE: usize = 0x40000;
 
 /// Sequencer Feed Client
 pub struct RelayClient {
@@ -163,41 +144,25 @@ impl RelayClient {
                                 .unwrap();
                         println!("l2 type: {}", l2_bytes[0]);
 
-                        // add support for batching
-                        //
+                        let l2_tx: Vec<Transaction> = match l2_bytes[0] {
+                            3 => {
+                                // batch
+                                let mut new_head = l2_bytes.as_slice();
+                                let mut result = vec![];
 
-                        // if depth >= 16 {
-                        // 			return nil, errors.New("L2 message batches have a max depth of 16")
-                        // 		}
-                        // 		segments := make(types.Transactions, 0)
-                        // 		index := big.NewInt(0)
-                        // 		for {
-                        // 			nextMsg, err := util.BytestringFromReader(rd, arbostypes.MaxL2MessageSize)
-                        // 			if err != nil {
-                        // 				// an error here means there are no further messages in the batch
-                        // 				// nolint:nilerr
-                        // 				return segments, nil
-                        // 			}
-                        //
-                        // 			var nextRequestId *common.Hash
-                        // 			if requestId != nil {
-                        // 				subRequestId := crypto.Keccak256Hash(requestId[:], math.U256Bytes(index))
-                        // 				nextRequestId = &subRequestId
-                        // 			}
-                        // 			nestedSegments, err := parseL2Message(bytes.NewReader(nextMsg), poster, timestamp, nextRequestId, chainId, depth+1)
-                        // 			if err != nil {
-                        // 				return nil, err
-                        // 			}
-                        // 			segments = append(segments, nestedSegments...)
-                        // 			index.Add(index, big.NewInt(1))
-                        // 		}
-
-                        let l2_tx: Transaction = match ethers::utils::rlp::decode(&l2_bytes[1..]) {
-                            Ok(r) => r,
-                            Err(_) => {
-                                println!("failed decode");
-                                continue;
+                                while new_head.len() > MAX_ARB_MSG_SIZE {
+                                    let res = new_head.split_at(MAX_ARB_MSG_SIZE);
+                                    let msg = res.0;
+                                    new_head = res.1;
+                                    result.push(ethers::utils::rlp::decode(&msg[1..]).unwrap());
+                                }
+                                result
                             }
+                            4 => {
+                                // single
+                                vec![ethers::utils::rlp::decode(&l2_bytes[1..]).unwrap()]
+                            }
+                            _ => unreachable!(),
                         };
 
                         let tx = Tx {

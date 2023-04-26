@@ -12,7 +12,7 @@ pub struct Tx {
     pub seq_num: i64,
     // Time at recieve
     pub time: Instant,
-    pub l2_tx: Transaction,
+    pub l2_tx: Vec<Transaction>,
 }
 
 /*
