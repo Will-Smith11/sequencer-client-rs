@@ -15,6 +15,17 @@ use std::{
 use tungstenite::{stream::MaybeTlsStream, WebSocket};
 use url::Url;
 
+const L1MessageType_L2Message: u8 = 3;
+const L1MessageType_EndOfBlock: u8 = 6;
+const L1MessageType_L2FundedByL1: u8 = 7;
+const L1MessageType_RollupEvent: u8 = 8;
+const L1MessageType_SubmitRetryable: u8 = 9;
+const L1MessageType_BatchForGasEstimation: u8 = 10; // probably won't use this in practice
+const L1MessageType_Initialize: u8 = 11;
+const L1MessageType_EthDeposit: u8 = 12;
+const L1MessageType_BatchPostingReport: u8 = 13;
+const L1MessageType_Invalid: u8 = 0xFF;
+
 /// Sequencer Feed Client
 pub struct RelayClient {
     // Socket connection to read from
@@ -138,6 +149,19 @@ impl RelayClient {
                         let l2_bytes =
                             base64::decode(&decoded_root.messages[0].message.message.l2msg)
                                 .unwrap();
+
+                        match l2_bytes[0] {
+                            L1MessageType_Invalid => println!("invalid message"),
+                            L1MessageType_L2Message => println!("l2 message"),
+                            L1MessageType_EndOfBlock => println!("end of block"),
+                            L1MessageType_EthDeposit => println!("eth deposit"),
+                            L1MessageType_Initialize => println!("initialize"),
+                            L1MessageType_RollupEvent => println!("rollup event"),
+                            L1MessageType_L2FundedByL1 => println!("l2 funded by l1"),
+                            L1MessageType_SubmitRetryable => println!("submit retryable"),
+                            L1MessageType_BatchForGasEstimation => println!("batch for gas estimation"),
+                            _ => {}
+                        }
 
                         let l2_tx: Transaction = match ethers::utils::rlp::decode(&l2_bytes[1..]) {
                             Ok(r) => r,
